@@ -52,7 +52,13 @@ $subject = "New Contact from: $name";
 $body = "Name: $name\nEmail: $email\n\nMessage:\n$message";
 
 // If SMTP host and credentials are configured, use authenticated SMTP sockets
-if ($smtp_host && $smtp_user && $smtp_pass) {
+if ($smtp_host) {
+    if (!$smtp_user || !$smtp_pass) {
+        http_response_code(500);
+        echo json_encode(['error' => 'SMTP_HOST is set, but MAIL_USERNAME or MAIL_PASSWORD is missing in .env.local']);
+        exit;
+    }
+
     $crlf = "\r\n";
     $headers = "From: $name <$from_email>" . $crlf;
     $headers .= "Reply-To: $email" . $crlf;
@@ -65,7 +71,7 @@ if ($smtp_host && $smtp_user && $smtp_pass) {
     $socket = @fsockopen($smtp_host, $smtp_port, $errno, $errstr, 15);
     if (!$socket) {
         http_response_code(500);
-        echo json_encode(['error' => 'Could not connect to SMTP server']);
+        echo json_encode(['error' => "Could not connect to SMTP server: $smtp_host on port $smtp_port"]);
         exit;
     }
 
@@ -122,6 +128,6 @@ if ($smtp_host && $smtp_user && $smtp_pass) {
         echo json_encode(['success' => true]);
     } else {
         http_response_code(500);
-        echo json_encode(['error' => 'Failed to send via PHP mail()']);
+        echo json_encode(['error' => 'Failed to send via PHP mail(). Ensure .env.local is uploaded and credentials are set.']);
     }
 }
