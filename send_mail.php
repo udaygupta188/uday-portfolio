@@ -63,8 +63,65 @@ $smtp_pass = $_ENV['MAIL_PASSWORD'] ?? '';
 $to_email = $_ENV['RECEIVER_EMAIL'] ?? $smtp_user; // Default to sending to yourself
 $from_email = $smtp_user; // Hostinger requires the 'From' address to match the authenticated user
 
-$subject = "New Contact from: $name";
-$body = "Name: $name\nEmail: $email\n\nMessage:\n$message";
+$subject = "Portfolio Contact: $name";
+
+// Create beautiful HTML template
+$html_body = "
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 40px 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .header { background: #101319; color: #ffffff; padding: 24px 30px; }
+        .header h2 { margin: 0; font-weight: 500; font-size: 18px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
+        .badge { background: #37e0d6; color: #04140a; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .content { padding: 30px; }
+        .field { margin-bottom: 24px; }
+        .label { font-size: 12px; text-transform: uppercase; color: #8991a3; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px; }
+        .value { font-size: 16px; color: #161a22; font-weight: 500; }
+        .message-box { font-size: 15px; color: #161a22; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #eef1f8; white-space: pre-wrap; line-height: 1.7; margin-top: 10px; }
+        .footer { text-align: center; padding: 20px; font-size: 13px; color: #8991a3; background: #fafafa; border-top: 1px solid #eef1f8; }
+        a { color: #0066cc; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h2><span class='badge'>New</span> Message from Portfolio</h2>
+        </div>
+        <div class='content'>
+            <table width='100%' cellpadding='0' cellspacing='0' style='margin-bottom: 24px;'>
+                <tr>
+                    <td width='50%' valign='top'>
+                        <div class='label'>Name</div>
+                        <div class='value'>" . htmlspecialchars($name) . "</div>
+                    </td>
+                    <td width='50%' valign='top'>
+                        <div class='label'>Email</div>
+                        <div class='value'><a href='mailto:" . htmlspecialchars($email) . "'>" . htmlspecialchars($email) . "</a></div>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class='field'>
+                <div class='label'>Project Details / Message</div>
+                <div class='message-box'>" . htmlspecialchars($message) . "</div>
+            </div>
+            
+            <div style='margin-top: 30px;'>
+                <a href='mailto:" . htmlspecialchars($email) . "' style='background: #101319; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; font-size: 14px; display: inline-block;'>Reply to " . explode(' ', htmlspecialchars($name))[0] . "</a>
+            </div>
+        </div>
+        <div class='footer'>
+            Sent securely from your portfolio (wipzent.com)
+        </div>
+    </div>
+</body>
+</html>
+";
+
+$body = $html_body;
 
 // If SMTP host and credentials are configured, use authenticated SMTP sockets
 if ($smtp_host) {
@@ -78,7 +135,7 @@ if ($smtp_host) {
     $headers = "From: $name <$from_email>" . $crlf;
     $headers .= "Reply-To: $email" . $crlf;
     $headers .= "Subject: $subject" . $crlf;
-    $headers .= "Content-Type: text/plain; charset=UTF-8" . $crlf . $crlf;
+    $headers .= "Content-Type: text/html; charset=UTF-8" . $crlf . $crlf;
 
     $body .= $crlf . ".";
 
@@ -137,7 +194,7 @@ if ($smtp_host) {
     // Fallback to PHP's built-in mail() function for standard shared hosting
     $headers = "From: $from_email\r\n";
     $headers .= "Reply-To: $email\r\n";
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
 
     if (mail($to_email, $subject, $body, $headers)) {
         echo json_encode(['success' => true]);
