@@ -16,8 +16,23 @@ function loadEnv($path)
     }
 }
 
-// Load credentials from .env.local
-loadEnv(__DIR__ . '/.env.local');
+// Try to find .env.local in common root locations
+$env_paths = [
+    __DIR__ . '/.env.local',                            // Current folder (freelance)
+    __DIR__ . '/../.env.local',                         // Parent folder (public_html)
+    __DIR__ . '/../../.env.local',                      // Grandparent folder (user root)
+    $_SERVER['DOCUMENT_ROOT'] . '/.env.local',          // Document Root
+    dirname($_SERVER['DOCUMENT_ROOT']) . '/.env.local'  // One level above Document Root
+];
+
+$env_loaded = false;
+foreach ($env_paths as $path) {
+    if (file_exists($path)) {
+        loadEnv($path);
+        $env_loaded = true;
+        break;
+    }
+}
 
 // Set JSON response header
 header('Content-Type: application/json');

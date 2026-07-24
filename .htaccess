@@ -1,0 +1,5 @@
+# Disable direct access to .env files for security
+<FilesMatch "^\.env">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
