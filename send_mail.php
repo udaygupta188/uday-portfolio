@@ -63,7 +63,7 @@ $smtp_pass = $_ENV['MAIL_PASSWORD'] ?? '';
 $to_email = $_ENV['RECEIVER_EMAIL'] ?? $smtp_user; // Default to sending to yourself
 $from_email = $smtp_user; // Hostinger requires the 'From' address to match the authenticated user
 
-$subject = "Portfolio Contact: $name";
+$subject = "New Project Requirement from $name";
 
 // Create beautiful HTML template
 $html_body = "
