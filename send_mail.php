@@ -152,44 +152,49 @@ if ($smtp_host) {
         $server_response = '';
         while (substr($server_response, 3, 1) != ' ') {
             if (!($server_response = fgets($socket, 256))) {
-                return false;
+                throw new Exception("Error reading from SMTP server.");
             }
         }
         if (!(substr($server_response, 0, 3) == $expected_response)) {
-            return false;
+            throw new Exception("SMTP Error: Expected $expected_response, got " . trim($server_response));
         }
         return true;
     }
 
-    server_parse($socket, '220');
+    try {
+        server_parse($socket, '220');
 
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    fputs($socket, "EHLO " . $host . $crlf);
-    server_parse($socket, '250');
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        fputs($socket, "EHLO " . $host . $crlf);
+        server_parse($socket, '250');
 
-    fputs($socket, "AUTH LOGIN" . $crlf);
-    server_parse($socket, '334');
-    fputs($socket, base64_encode($smtp_user) . $crlf);
-    server_parse($socket, '334');
-    fputs($socket, base64_encode($smtp_pass) . $crlf);
-    server_parse($socket, '235');
+        fputs($socket, "AUTH LOGIN" . $crlf);
+        server_parse($socket, '334');
+        fputs($socket, base64_encode($smtp_user) . $crlf);
+        server_parse($socket, '334');
+        fputs($socket, base64_encode($smtp_pass) . $crlf);
+        server_parse($socket, '235');
 
-    fputs($socket, "MAIL FROM: <$from_email>" . $crlf);
-    server_parse($socket, '250');
+        fputs($socket, "MAIL FROM: <$from_email>" . $crlf);
+        server_parse($socket, '250');
 
-    fputs($socket, "RCPT TO: <$to_email>" . $crlf);
-    server_parse($socket, '250');
+        fputs($socket, "RCPT TO: <$to_email>" . $crlf);
+        server_parse($socket, '250');
 
-    fputs($socket, "DATA" . $crlf);
-    server_parse($socket, '354');
+        fputs($socket, "DATA" . $crlf);
+        server_parse($socket, '354');
 
-    fputs($socket, $headers . $body . $crlf);
-    server_parse($socket, '250');
+        fputs($socket, $headers . $body . $crlf);
+        server_parse($socket, '250');
 
-    fputs($socket, "QUIT" . $crlf);
-    fclose($socket);
+        fputs($socket, "QUIT" . $crlf);
+        fclose($socket);
 
-    echo json_encode(['success' => true]);
+        echo json_encode(['success' => true]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
+    }
 } else {
     // Fallback to PHP's built-in mail() function for standard shared hosting
     $headers = "From: $from_email\r\n";
