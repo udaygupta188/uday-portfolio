@@ -137,7 +137,6 @@ if ($smtp_host) {
     $clean_name = str_replace(["\r", "\n"], '', $name);
     
     $headers = "From: $clean_name <$from_email>" . $crlf;
-    $headers .= "Reply-To: $email" . $crlf;
     $headers .= "Subject: $subject" . $crlf;
     $headers .= "Content-Type: text/html; charset=UTF-8" . $crlf . $crlf;
 
@@ -207,7 +206,6 @@ if ($smtp_host) {
 } else {
     // Fallback to PHP's built-in mail() function for standard shared hosting
     $headers = "From: $from_email\r\n";
-    $headers .= "Reply-To: $email\r\n";
     $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
 
     if (mail($to_email, $subject, $body, $headers)) {
