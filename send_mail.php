@@ -56,11 +56,11 @@ if (empty($name) || empty($email) || empty($message)) {
 }
 
 // Read variables from environment
-$smtp_host = $_ENV['MAIL_HOST'] ?? '';
-$smtp_port = $_ENV['MAIL_PORT'] ?? 587;
-$smtp_user = $_ENV['MAIL_USERNAME'] ?? '';
-$smtp_pass = $_ENV['MAIL_PASSWORD'] ?? '';
-$to_email = $_ENV['RECEIVER_EMAIL'] ?? $smtp_user; // Default to sending to yourself
+$smtp_host = $_ENV['MAIL_HOST'] ?? $_SERVER['MAIL_HOST'] ?? getenv('MAIL_HOST') ?: '';
+$smtp_port = $_ENV['MAIL_PORT'] ?? $_SERVER['MAIL_PORT'] ?? getenv('MAIL_PORT') ?: 587;
+$smtp_user = $_ENV['MAIL_USERNAME'] ?? $_SERVER['MAIL_USERNAME'] ?? getenv('MAIL_USERNAME') ?: '';
+$smtp_pass = $_ENV['MAIL_PASSWORD'] ?? $_SERVER['MAIL_PASSWORD'] ?? getenv('MAIL_PASSWORD') ?: '';
+$to_email = $_ENV['RECEIVER_EMAIL'] ?? $_SERVER['RECEIVER_EMAIL'] ?? getenv('RECEIVER_EMAIL') ?: $smtp_user; // Default to sending to yourself
 $from_email = $smtp_user; // Hostinger requires the 'From' address to match the authenticated user
 
 $subject = "New Project Requirement from $name";
@@ -132,10 +132,19 @@ if ($smtp_host) {
     }
 
     $crlf = "\r\n";
-    $headers = "From: $name <$from_email>" . $crlf;
+    
+    // Sanitize headers
+    $clean_name = str_replace(["\r", "\n"], '', $name);
+    
+    $headers = "From: $clean_name <$from_email>" . $crlf;
     $headers .= "Reply-To: $email" . $crlf;
     $headers .= "Subject: $subject" . $crlf;
     $headers .= "Content-Type: text/html; charset=UTF-8" . $crlf . $crlf;
+
+    // Normalize newlines to CRLF for SMTP and escape leading dots
+    $body = str_replace(["\r\n", "\r", "\n"], "\n", $body);
+    $body = preg_replace('/^\./m', '..', $body);
+    $body = str_replace("\n", $crlf, $body);
 
     $body .= $crlf . ".";
 

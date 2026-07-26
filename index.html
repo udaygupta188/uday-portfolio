@@ -1549,10 +1549,15 @@ input.addEventListener('input', ()=>{
         status.className = 'cform-status ok';
         form.reset();
       } else {
-        throw new Error('Failed to send message');
+        let errorMsg = 'Failed to send message';
+        try {
+          const data = await res.json();
+          if (data.error) errorMsg = data.error;
+        } catch (e) {}
+        throw new Error(errorMsg);
       }
     } catch(err){
-      status.textContent = "Couldn't send — please email info@wipzent.com directly.";
+      status.textContent = "Couldn't send: " + err.message;
       status.className = 'cform-status err';
     } finally {
       btn.textContent = originalText; btn.disabled = false;
